@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Archiboost Concept · Gaurav Basantani</title>
+<meta name="description" content="Count each room once: a QA/QC ticket says a 36 in. corridor serves 52 occupants and must be 44 in., but one fitness room is counted twice, from the plan and the room schedule. Counted once, it is 38 and 36 in. is enough. A screen in the style of Archiboost's ticket view. An unofficial concept by Gaurav Basantani.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* One screen, one moment: an architect triages one QA/QC ticket on sheet A-201, in a window shaped like
+   Archiboost's ticket view (drawing with a location box on the left, the ticket with Description,
+   Recommendation, Priority, Status, Assignees and Comments on the right).
+   The ticket counts one room twice: once from the plan tag and once from the room schedule. */
+:root{
+  --bg:#f3f4f6; --page-ink:#14181f; --page-muted:#5a6270; --page-line:#d8dce3;
+  --accent:#2f5bd3; --ok:#18794e; --bad:#b42318;
+  /* the app window stays light in both page modes, like a drawing viewer */
+  --w-bg:#ffffff; --w-2:#f7f8fa; --w-3:#eceff3; --w-line:#e1e5eb; --w-ink:#151a22; --w-muted:#5d6675; --w-dim:#9098a5;
+  --ink-btn:#1b2330;
+  --green:#18794e; --green-soft:#e6f4ec; --green-line:#a8d8bd;
+  --red:#c0262d; --red-soft:#fde8e8; --red-line:#f3b4b4;
+  --amber:#8a5300; --amber-soft:#fff5df; --amber-line:#efc56d;
+  --plan:#2a3240; --plan-dim:#9aa3b2;
+  --shadow:0 1px 2px rgba(20,24,31,.06),0 20px 48px rgba(20,24,31,.12);
+  --sans:"Inter",system-ui,-apple-system,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0c0f14; --page-ink:#eef1f5; --page-muted:#a2aab7; --page-line:#262c36;
+  --accent:#8eaaf5; --ok:#5fd3a1; --bad:#f87171; --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0c0f14; --page-ink:#eef1f5; --page-muted:#a2aab7; --page-line:#262c36;
+  --accent:#8eaaf5; --ok:#5fd3a1; --bad:#f87171; --shadow:none; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--page-ink);font:15px/1.45 var(--sans);padding:20px max(16px,env(safe-area-inset-right,0px)) 32px max(16px,env(safe-area-inset-left,0px))}
+p,h1,h2,h3,ul,ol{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+.page{max-width:1180px;margin:0 auto;display:grid;gap:14px}
+.head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,420px);gap:16px 40px;align-items:end}
+.eyebrow{font:500 .72rem var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(1.6rem,3.4vw,2.3rem)/1.06 var(--sans);letter-spacing:-.03em;margin-top:6px}
+.sub{color:var(--page-muted);font-size:1rem;margin-top:6px;max-width:60ch}
+.now{border-left:3px solid var(--accent);padding:3px 0 3px 14px;display:grid;gap:3px}
+.now.bad{border-color:var(--bad)}
+.now.ok{border-color:var(--ok)}
+.now b{font-weight:600}
+.now.bad b{color:var(--bad)}
+.now.ok b{color:var(--ok)}
+.now span{color:var(--page-muted);font-size:.93rem}
+/* the app window */
+.window{background:var(--w-bg);color:var(--w-ink);border:1px solid var(--w-line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;color-scheme:light}
+.bar{display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid var(--w-line);font-size:.86rem;color:var(--w-muted);min-width:0;cursor:default}
+.bar .mark{width:20px;height:20px;border-radius:5px;background:var(--w-3);border:1px solid var(--w-line);flex:none}
+.bar .path{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .path b{color:var(--w-ink);font-weight:600}
+.bar .who{margin-left:auto;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.bar .who span:first-child{color:var(--w-dim)}
+.av{width:24px;height:24px;border-radius:50%;background:var(--w-3);display:inline-grid;place-items:center;font:600 .64rem var(--sans);font-style:normal;color:var(--w-muted);flex:none}
+.app{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,530px);min-height:520px}
+/* drawing viewer */
+.sheet{border-right:1px solid var(--w-line);background:var(--w-2);display:flex;flex-direction:column;min-width:0}
+.shead{display:flex;align-items:baseline;gap:10px;padding:12px 16px 8px;font-size:.84rem;color:var(--w-muted)}
+.shead b{color:var(--w-ink);font-weight:600}
+.paper{margin:0 14px 14px;background:#fff;border:1px solid var(--w-line);border-radius:6px;flex:1;display:grid;place-items:center;padding:8px}
+.paper svg{width:100%;height:auto;max-height:470px;display:block}
+.plan-l{stroke:var(--plan);fill:none;stroke-width:2}
+.plan-t{fill:var(--plan);font:500 13px var(--mono)}
+.plan-s{fill:#6b7483;font:400 11px var(--mono)}
+.plan-r{fill:var(--plan);font:600 14px var(--sans)}
+/* ticket */
+.ticket{padding:13px 20px 14px;display:grid;gap:9px;align-content:start;min-width:0}
+.trow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-size:.8rem;color:var(--w-muted)}
+.tid{font:500 .82rem var(--mono);color:var(--w-ink)}
+.pill{font:500 .74rem var(--sans);border-radius:999px;padding:2px 9px;white-space:nowrap;border:1px solid var(--w-line);background:var(--w-3);color:var(--w-ink)}
+.pill.high{background:var(--red-soft);color:var(--red);border-color:var(--red-line)}
+.pill.acc{background:var(--red-soft);color:var(--red);border-color:var(--red-line)}
+.pill.rej{background:var(--green-soft);color:var(--green);border-color:var(--green-line)}
+.ticket h3{font:600 1.08rem/1.25 var(--sans)}
+.field{display:grid;gap:2px;font-size:.88rem}
+.field>span{font:500 .72rem var(--sans);color:var(--w-muted);text-transform:uppercase;letter-spacing:.05em}
+.field p{color:var(--w-ink)}
+.occ{border:1px solid var(--w-line);border-radius:10px;overflow:hidden;font-size:.84rem}
+.occ .th{font:500 .72rem var(--sans);color:var(--w-muted);padding:6px 11px;background:var(--w-2);border-bottom:1px solid var(--w-line)}
+.or{display:grid;grid-template-columns:minmax(0,1fr) auto 40px;gap:2px 10px;padding:6px 11px;align-items:baseline}
+.or+.or{border-top:1px solid var(--w-line)}
+.or .src{display:block;font:400 .72rem var(--mono);color:var(--w-muted)}
+.or .calc{font:400 .76rem var(--mono);color:var(--w-muted);white-space:nowrap;text-align:right}
+.or .n{font:500 .84rem var(--mono);text-align:right}
+.or.dup{background:var(--amber-soft)}
+.or.dup .src{color:var(--amber)}
+.or.dup .n{color:var(--amber);text-decoration:line-through}
+.or.dup small{display:block;color:var(--amber);font-size:.74rem;font-weight:500}
+.or.sum{background:var(--w-2);font-weight:600}
+.or.sum .n{color:var(--w-ink)}
+.or.sum.good .n,.or.sum.good b{color:var(--green)}
+.warn{display:flex;gap:8px;align-items:flex-start;font-size:.86rem;color:var(--amber);background:var(--amber-soft);border-radius:8px;padding:7px 10px}
+.warn b{font-weight:600}
+.ticket.bad .warn{color:var(--red);background:var(--red-soft)}
+.why{font-size:.8rem;color:var(--w-muted);border-left:2px solid var(--w-line);padding-left:9px}
+.why b{color:var(--w-ink);font-weight:600}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.btn{font:500 .86rem var(--sans);border-radius:8px;padding:6px 13px;border:1px solid #c8cfd9;background:var(--w-bg);color:var(--w-ink);min-height:36px}
+.btn.primary{background:var(--ink-btn);border-color:var(--ink-btn);color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:focus-visible,.wf button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--w-muted);align-items:center}
+.who3{display:inline-flex;align-items:center;gap:6px;color:var(--w-ink)}
+.asg{font-size:.84rem;padding:0 4px;flex:0 1 auto;min-width:0;line-height:1.2}
+.ticket>*{min-width:0}
+.cmt{border:1px solid var(--w-line);border-radius:10px;padding:9px 11px;display:grid;gap:4px;font-size:.84rem}
+.cmt .by{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--w-muted)}
+.cmt .by b{color:var(--w-ink);font-weight:600}
+.res{border-radius:10px;padding:10px 12px;display:grid;gap:6px;font-size:.86rem;border:1px solid var(--red-line);background:var(--red-soft)}
+.res h3{font:600 .93rem var(--sans);color:var(--red)}
+.res p{color:var(--w-muted)}
+.only-m{display:none}
+.only-s{display:none!important}
+.wf{display:flex;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--w-line);font-size:.76rem;color:var(--w-dim);background:var(--w-2)}
+.wf span{flex:1;min-width:0}
+.wf button{border:1px solid #c8cfd9;background:var(--w-bg);color:var(--w-ink);border-radius:7px;padding:4px 11px;font-size:.78rem;font-weight:500;min-height:30px}
+.wf button:disabled{opacity:.4;cursor:default}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 18px;font-size:.78rem;color:var(--page-muted)}
+.foot a{color:var(--page-ink);text-decoration:none;border-bottom:1px solid var(--page-line)}
+@media(max-width:900px){.head{grid-template-columns:1fr;gap:10px}}
+@media(max-width:860px){
+  .app{grid-template-columns:1fr;min-height:0}
+  .sheet{order:2;border-right:0;border-top:1px solid var(--w-line)}
+  .paper svg{max-height:300px}
+  .ticket{padding:12px 14px}
+  .bar .who span{display:none}
+}
+@media(max-width:620px){
+  body{padding-top:14px;padding-bottom:20px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+  .page{gap:11px}
+  h1{font-size:1.5rem}
+  .sub{display:none}
+  .eyebrow{letter-spacing:.05em;font-size:.66rem}
+  .now span{font-size:.86rem}
+  .now b{font-size:.94rem}
+  .bar{display:none}
+  .ticket{padding:9px 9px 10px;gap:7px}
+  .ticket h3{font-size:.95rem}
+  .trow{font-size:.74rem;gap:4px 8px}
+  .field{font-size:.8rem}
+  .field>span{font-size:.66rem}
+  .occ{font-size:.78rem}
+  .occ .th{display:none}
+  .or{grid-template-columns:minmax(0,1fr) auto 30px;padding:4px 8px;gap:0 8px}
+  .or .calc{font-size:.7rem}
+  .or .src{font-size:.66rem}
+  .or.dup small{display:none}
+  .warn{font-size:.8rem;padding:6px 9px}
+  .why{font-size:.74rem}
+  .btns{flex-wrap:nowrap;gap:5px}
+  .btn{font-size:.8rem;padding:5px 9px;white-space:nowrap;min-height:36px}
+  .hide-s{display:none}
+  .only-m{display:inline}
+  .only-s{display:inline-flex!important}
+  .cmt,.res{font-size:.8rem;padding:8px 10px}
+  .meta{font-size:.74rem}
+}
+@media(prefers-reduced-motion:no-preference){.ticket,.res,.cmt{animation:in .18s ease-out both}@keyframes in{from{transform:translateY(3px);opacity:.6}}}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="head">
+    <div>
+      <div class="eyebrow">Design concept for Archiboost · unofficial</div>
+      <h1>Count each room once</h1>
+      <p class="sub">A project architect answers one QA/QC ticket before the drawing set goes out, in a screen shaped like Archiboost's ticket view.</p>
+    </div>
+    <div class="now" id="now" aria-live="polite"></div>
+  </header>
+
+  <section class="window" aria-label="QA/QC ticket on sheet A-201, concept">
+    <div class="bar"><span class="mark" aria-hidden="true"></span><span class="path">QA/QC › <b id="proj"></b></span><span class="who"><span>Reviewing</span><i class="av">MB</i><span>Marcus Bell, AIA · Mesquite Studio</span></span></div>
+    <div class="app" id="app"></div>
+    <div class="wf"><span>Made-up project, firm, people, rooms and areas</span><button type="button" id="undo">Undo</button><button type="button" id="reset">Start over</button></div>
+  </section>
+
+  <footer class="foot"><span>By Gaurav Basantani · <a href="https://gauravbasantani.com">gauravbasantani.com</a></span><span>Not affiliated with Archiboost. Code rules simplified from the 2021 IBC. Not code advice.</span></footer>
+</div>
+
+<script>
+(function(){
+  /* A made-up drawing set. Every number on the page is computed here:
+     each row's occupants = area / load factor (rounded up); the ticket's total adds every row, the right total
+     adds each room once; the required width comes from the occupant load; the cost of widening is length x added width. */
+  var PROJ="Saguaro Flats", REVIEW="DD set review";
+  var USER="Marcus Bell", PM="Dana Ruiz";
+  var CORR={id:"C-2",clear:36,lengthFt:96};
+  var UNIT_SF=800, UNITS=["201","202","203","204","205","206"];
+  /* rows the ticket used. room = the real room, so a duplicate is the same room from a second source */
+  var ROWS=[
+    {room:"units",label:"Units 201–206",what:"apartments",sf:UNIT_SF*UNITS.length,factor:200,src:"A-201 plan"},
+    {room:"207",label:"Fitness 207",what:"exercise room",sf:700,factor:50,src:"A-201 plan tag"},
+    {room:"207",label:"FITNESS 207",what:"exercise room",sf:700,factor:50,src:"A-601 room schedule"}
+  ];
+  ROWS.forEach(function(r){r.occ=Math.ceil(r.sf/r.factor)});
+  var seen={}; ROWS.forEach(function(r){r.dup=!!seen[r.room];seen[r.room]=true});
+  function sum(a){return a.reduce(function(s,r){return s+r.occ},0)}
+  var TICKET=sum(ROWS), ONCE=sum(ROWS.filter(function(r){return !r.dup}));
+  var DUP=ROWS.filter(function(r){return r.dup})[0];
+  /* IBC 2021 Table 1020.3, the rows that can apply here; 0.2 in. per occupant from 1005.3.2 */
+  function need(n){return n<50?36:44}
+  var NEED_T=need(TICKET), NEED_R=need(ONCE), ADD=NEED_T-CORR.clear, LOST=CORR.lengthFt*ADD/12;
+  var EGRESS=Math.round(ONCE*0.2*10)/10;
+  function e(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  function nb(s){return '<span style="white-space:nowrap">'+s+'</span>'}
+
+  /* s: "none" (no response), "acc" (accepted: the wrong answer), "rej" (rejected with the reason) */
+  function fresh(){return {s:"none",assigned:false,undone:false}}
+  var st=fresh(), hist=[];
+  function snap(){hist.push(JSON.stringify(st))}
+
+  function plan(){
+    /* 1 ft = 6 px. Corridor runs 96 ft between Stair A and Fitness 207; units are 32 x 25 ft = 800 sf */
+    var k=6, x0=70, y0=30, uw=32*k, ud=25*k, cw=6*k, L=CORR.lengthFt*k, fw=28*k;
+    var cy=y0+ud, h='';
+    h+='<svg viewBox="0 0 '+(x0+L+fw+40)+' '+(y0+2*ud+cw+70)+'" role="img" aria-label="Level 2 plan: corridor '+CORR.id+' between six apartments, Fitness 207 at the east end, location box on the corridor">';
+    h+='<rect class="plan-l" x="'+(x0-60)+'" y="'+y0+'" width="60" height="'+(2*ud+cw)+'"/><text class="plan-s" x="'+(x0-56)+'" y="'+(cy+cw/2+4)+'">STAIR A</text>';
+    for(var i=0;i<3;i++){
+      h+='<rect class="plan-l" x="'+(x0+i*uw)+'" y="'+y0+'" width="'+uw+'" height="'+ud+'"/>';
+      h+='<text class="plan-r" x="'+(x0+i*uw+12)+'" y="'+(y0+24)+'">'+UNITS[i]+'</text><text class="plan-s" x="'+(x0+i*uw+12)+'" y="'+(y0+38)+'">'+UNIT_SF+' SF</text>';
+      h+='<rect class="plan-l" x="'+(x0+i*uw)+'" y="'+(cy+cw)+'" width="'+uw+'" height="'+ud+'"/>';
+      h+='<text class="plan-r" x="'+(x0+i*uw+12)+'" y="'+(cy+cw+24)+'">'+UNITS[i+3]+'</text><text class="plan-s" x="'+(x0+i*uw+12)+'" y="'+(cy+cw+38)+'">'+UNIT_SF+' SF</text>';
+    }
+    var dupOn=st.s!=="rej";
+    h+='<rect x="'+(x0+L)+'" y="'+y0+'" width="'+fw+'" height="'+(2*ud+cw)+'" fill="'+(dupOn?'#fff5df':'#fff')+'" stroke="#2a3240" stroke-width="2"/>';
+    h+='<text class="plan-r" x="'+(x0+L+14)+'" y="'+(cy-6)+'">FITNESS 207</text><text class="plan-s" x="'+(x0+L+14)+'" y="'+(cy+10)+'">700 SF</text>';
+    h+='<text class="plan-s" x="'+(x0+L/2-30)+'" y="'+(cy+cw/2+4)+'">CORRIDOR '+CORR.id+'</text>';
+    h+='<text class="plan-t" x="'+(x0+8)+'" y="'+(cy+cw/2+5)+'">'+CORR.clear+'" CLR</text>';
+    var dy=y0+2*ud+cw+22;
+    h+='<line x1="'+x0+'" y1="'+dy+'" x2="'+(x0+L)+'" y2="'+dy+'" stroke="#9aa3b2"/><line x1="'+x0+'" y1="'+(dy-5)+'" x2="'+x0+'" y2="'+(dy+5)+'" stroke="#9aa3b2"/><line x1="'+(x0+L)+'" y1="'+(dy-5)+'" x2="'+(x0+L)+'" y2="'+(dy+5)+'" stroke="#9aa3b2"/>';
+    h+='<text class="plan-t" x="'+(x0+L/2-22)+'" y="'+(dy+15)+'">'+CORR.lengthFt+'\'-0"</text>';
+    var col=st.s==="rej"?"#18794e":"#c0262d";
+    h+='<rect x="'+(x0-4)+'" y="'+(cy-4)+'" width="'+(L+8)+'" height="'+(cw+8)+'" fill="none" stroke="'+col+'" stroke-width="2.5" stroke-dasharray="7 4" rx="3"/>';
+    h+='<text x="'+(x0+L-60)+'" y="'+(cy-9)+'" fill="'+col+'" style="font:600 11px IBM Plex Mono,monospace">T-412</text>';
+    return h+'</svg>';
+  }
+  function sheet(){
+    return '<div class="sheet"><div class="shead"><b>A-201</b><span>Level 2 plan · '+e(PROJ)+'</span></div><div class="paper">'+plan()+'</div></div>';
+  }
+  function occTable(){
+    var h='<div class="occ"><div class="th">Occupants this ticket used, with where each number came from</div>';
+    h+=ROWS.map(function(r){
+      return '<div class="or'+(r.dup?' dup':'')+'"><span>'+e(r.label)+'<span class="src">'+e(r.src)+'</span>'+'</span><span class="calc">'+r.sf.toLocaleString("en-US")+' sf ÷ '+r.factor+'</span><span class="n">'+r.occ+'</span></div>'}).join("");
+    h+='<div class="or sum"><span>Ticket\'s total</span><span class="calc">needs '+NEED_T+' in.</span><span class="n">'+TICKET+'</span></div>';
+    h+='<div class="or sum good"><span><b>Each room once</b></span><span class="calc">under 50: '+NEED_R+' in.</span><span class="n">'+ONCE+'</span></div>';
+    return h+'</div>';
+  }
+  function why(){
+    return '<p class="why"><b>No other rule asks for more here.</b> Egress width is '+ONCE+' × 0.2 in. = '+EGRESS+' in.; an accessible route needs 36 in.; the 72–96 in. rows are for schools, clinics and hospitals, not apartments.</p>';
+  }
+  function statusPill(){
+    if(st.s==="acc")return '<span class="pill acc">Status: Accepted</span>';
+    if(st.s==="rej")return '<span class="pill rej">Status: Rejected</span>';
+    return '<span class="pill">Status: None <span class="hide-s">(no response yet)</span></span>';
+  }
+  function ticket(){
+    var bad=st.s==="acc";
+    var h='<div class="ticket'+(bad?' bad':'')+'">';
+    h+='<div class="trow"><span class="tid">T-412</span><span class="pill high">Priority: High</span>'+statusPill()+'</div>';
+    h+='<h3>Corridor too narrow for its occupant load</h3>';
+    h+='<div class="field"><span>Description</span><p>Corridor '+CORR.id+' is '+CORR.clear+' in. clear and serves '+TICKET+' occupants. IBC Table 1020.3 requires '+NEED_T+' in. at 50 or more.</p></div>';
+    h+='<div class="field"><span>Recommendation</span><p>Widen to '+NEED_T+' in. clear.</p></div>';
+    if(st.s==="none")h+='<div class="warn"><span aria-hidden="true">⚠</span><span><b>Fitness 207 is counted twice:</b> once from the plan, once from the room schedule.</span></div>';
+    h+=occTable();
+    if(st.s==="none"){
+      h+=why();
+      h+='<div class="btns"><button type="button" class="btn primary" data-rej="1">Reject with reason</button><button type="button" class="btn" data-acc="1">Accept</button>'+(st.assigned?'<span class="who3 asg"><i class="av">DR</i>Assigned to '+e(PM)+', PM</span>':'<button type="button" class="btn" data-asg="1">Assign</button>')+'</div>';
+    } else if(st.s==="acc"){
+      h+='<div class="res"><h3>Heads up: this redesigns a corridor that already passes</h3><p>Widening '+CORR.id+' by '+ADD+' in. along '+CORR.lengthFt+' ft takes '+LOST+' sq ft from the apartments. Undo puts the ticket back to None.</p><div class="btns"><button type="button" class="btn primary" data-undo="1">Undo</button></div></div>';
+    } else {
+      h+='<div class="cmt"><div class="by"><i class="av">MB</i><b>'+e(USER)+'</b><span>Rejected with reason</span></div><p>'+e(DUP.label.replace("FITNESS","Fitness"))+' is in twice (A-201 plan and A-601 schedule). '+CORR.clear+' in. meets Table 1020.3 for under 50.</p></div>';
+    }
+    h+='<div class="meta"><span class="only-s">Reviewing</span><span class="who3 only-s"><i class="av">MB</i>'+e(USER)+', AIA · Mesquite Studio</span>'+(st.assigned&&st.s!=="none"?'<span class="who3"><i class="av">DR</i>Assigned to '+e(PM)+', PM</span>':'')+'</div>';
+    return h+'</div>';
+  }
+  function narrate(){
+    var n=document.getElementById("now"), cls="", b, s;
+    if(st.s==="acc"){cls="bad";b="Accepted: a corridor redesign for occupants who aren't there.";s="Undo, then reject it with the reason."}
+    else if(st.s==="rej"){cls="ok";b="Rejected, and the reason is on the ticket.";s="Corridor "+CORR.id+" stays "+CORR.clear+" in. The next reviewer can see why."}
+    else if(st.assigned){b="Assigning doesn't decide the ticket.";s=PM+" can check the schedule, but the status stays None until someone rejects or accepts it."}
+    else if(st.undone){cls="ok";b="Undone. T-412 is back to None.";s="Reject it with the reason, or assign it to the PM."}
+    else{b="This ticket counts one room twice.";s="Each row shows its source. Try accepting it anyway."}
+    n.className="now "+cls;n.innerHTML='<b>'+e(b)+'</b><span>'+e(s)+'</span>';
+  }
+  var A=document.getElementById("app"), U=document.getElementById("undo");
+  document.getElementById("proj").textContent="[Made-up] "+PROJ+" · "+REVIEW;
+  function render(){A.innerHTML=sheet()+ticket();U.disabled=!hist.length;narrate()}
+  function undo(){if(!hist.length)return;st=JSON.parse(hist.pop());st.undone=true;render()}
+  document.addEventListener("click",function(ev){
+    var b=ev.target.closest("button"); if(!b||b.disabled)return;
+    var d=b.dataset;
+    if(b.id==="undo"||d.undo){undo();return}
+    if(b.id==="reset"){st=fresh();hist=[];render();scrollTo(0,0);return}
+    if(d.acc){snap();st.undone=false;st.s="acc"}
+    if(d.rej){snap();st.undone=false;st.s="rej"}
+    if(d.asg){snap();st.undone=false;st.assigned=true}
+    render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>
