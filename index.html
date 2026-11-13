@@ -220,7 +220,7 @@ h1{font:700 clamp(1.6rem,3.4vw,2.3rem)/1.06 var(--sans);letter-spacing:-.03em;ma
     /* 1 ft = 6 px. Corridor runs 96 ft between Stair A and Fitness 207; units are 32 x 25 ft = 800 sf */
     var k=6, x0=70, y0=30, uw=32*k, ud=25*k, cw=6*k, L=CORR.lengthFt*k, fw=28*k;
     var cy=y0+ud, h='';
-    h+='<svg viewBox="0 0 '+(x0+L+fw+40)+' '+(y0+2*ud+cw+70)+'" role="img" aria-label="Level 2 plan: corridor '+CORR.id+' between six apartments, Fitness 207 at the east end, location box on the corridor">';
+    h+='<svg viewBox="0 0 '+(x0+L+fw+40)+' '+(y0+2*ud+cw+70)+'" role="img" aria-label="Level 2 plan: corridor '+CORR.id+' between six apartments, Stair A at the west end, Fitness 207 and Stair B at the east end, location box on the corridor">';
     h+='<rect class="plan-l" x="'+(x0-60)+'" y="'+y0+'" width="60" height="'+(2*ud+cw)+'"/><text class="plan-s" x="'+(x0-56)+'" y="'+(cy+cw/2+4)+'">STAIR A</text>';
     for(var i=0;i<3;i++){
       h+='<rect class="plan-l" x="'+(x0+i*uw)+'" y="'+y0+'" width="'+uw+'" height="'+ud+'"/>';
@@ -229,8 +229,11 @@ h1{font:700 clamp(1.6rem,3.4vw,2.3rem)/1.06 var(--sans);letter-spacing:-.03em;ma
       h+='<text class="plan-r" x="'+(x0+i*uw+12)+'" y="'+(cy+cw+24)+'">'+UNITS[i+3]+'</text><text class="plan-s" x="'+(x0+i*uw+12)+'" y="'+(cy+cw+38)+'">'+UNIT_SF+' SF</text>';
     }
     var dupOn=st.s!=="rej";
-    h+='<rect x="'+(x0+L)+'" y="'+y0+'" width="'+fw+'" height="'+(2*ud+cw)+'" fill="'+(dupOn?'#fff5df':'#fff')+'" stroke="#2a3240" stroke-width="2"/>';
-    h+='<text class="plan-r" x="'+(x0+L+14)+'" y="'+(cy-6)+'">FITNESS 207</text><text class="plan-s" x="'+(x0+L+14)+'" y="'+(cy+10)+'">700 SF</text>';
+    /* east end: Fitness 207 is 28 x 25 ft = 700 sf (north), Stair B (south), so the floor has two exits */
+    h+='<rect x="'+(x0+L)+'" y="'+y0+'" width="'+fw+'" height="'+ud+'" fill="'+(dupOn?'#fff5df':'#fff')+'" stroke="#2a3240" stroke-width="2"/>';
+    h+='<text class="plan-r" x="'+(x0+L+14)+'" y="'+(y0+24)+'">FITNESS 207</text><text class="plan-s" x="'+(x0+L+14)+'" y="'+(y0+38)+'">700 SF</text>';
+    h+='<rect class="plan-l" x="'+(x0+L)+'" y="'+(cy+cw)+'" width="'+fw+'" height="'+ud+'"/><text class="plan-s" x="'+(x0+L+14)+'" y="'+(cy+cw+24)+'">STAIR B</text>';
+    h+='<line class="plan-l" x1="'+(x0+L+fw)+'" y1="'+cy+'" x2="'+(x0+L+fw)+'" y2="'+(cy+cw)+'"/>';
     h+='<text class="plan-s" x="'+(x0+L/2-30)+'" y="'+(cy+cw/2+4)+'">CORRIDOR '+CORR.id+'</text>';
     h+='<text class="plan-t" x="'+(x0+8)+'" y="'+(cy+cw/2+5)+'">'+CORR.clear+'" CLR</text>';
     var dy=y0+2*ud+cw+22;
