@@ -75,8 +75,7 @@ h1{font:700 clamp(1.6rem,3.4vw,2.3rem)/1.06 var(--sans);letter-spacing:-.03em;ma
 .tid{font:500 .82rem var(--mono);color:var(--w-ink)}
 .pill{font:500 .74rem var(--sans);border-radius:999px;padding:2px 9px;white-space:nowrap;border:1px solid var(--w-line);background:var(--w-3);color:var(--w-ink)}
 .pill.high{background:var(--red-soft);color:var(--red);border-color:var(--red-line)}
-.pill.acc{background:var(--red-soft);color:var(--red);border-color:var(--red-line)}
-.pill.rej{background:var(--green-soft);color:var(--green);border-color:var(--green-line)}
+.pill.acc,.pill.rej{background:var(--w-3);color:var(--w-ink);border-color:#c8cfd9;font-weight:600}
 .ticket h3{font:600 1.08rem/1.25 var(--sans)}
 .field{display:grid;gap:2px;font-size:.88rem}
 .field>span{font:500 .72rem var(--sans);color:var(--w-muted);text-transform:uppercase;letter-spacing:.05em}
@@ -98,7 +97,7 @@ h1{font:700 clamp(1.6rem,3.4vw,2.3rem)/1.06 var(--sans);letter-spacing:-.03em;ma
 .warn{display:flex;gap:8px;align-items:flex-start;font-size:.86rem;color:var(--amber);background:var(--amber-soft);border-radius:8px;padding:7px 10px}
 .warn b{font-weight:600}
 .ticket.bad .warn{color:var(--red);background:var(--red-soft)}
-.why{font-size:.8rem;color:var(--w-muted);border-left:2px solid var(--w-line);padding-left:9px}
+.why{font-size:.82rem;color:#3f4754;border-left:2px solid var(--w-line);padding-left:9px}
 .why b{color:var(--w-ink);font-weight:600}
 .btns{display:flex;flex-wrap:wrap;gap:8px}
 .btn{font:500 .86rem var(--sans);border-radius:8px;padding:6px 13px;border:1px solid #c8cfd9;background:var(--w-bg);color:var(--w-ink);min-height:36px}
@@ -109,6 +108,11 @@ h1{font:700 clamp(1.6rem,3.4vw,2.3rem)/1.06 var(--sans);letter-spacing:-.03em;ma
 .who3{display:inline-flex;align-items:center;gap:6px;color:var(--w-ink)}
 .asg{font-size:.84rem;padding:0 4px;flex:0 1 auto;min-width:0;line-height:1.2}
 .ticket>*{min-width:0}
+.draft{border:1px solid #c8cfd9;border-radius:10px;padding:10px 12px;display:grid;gap:7px;background:var(--w-2)}
+.draft label{font:500 .72rem var(--sans);color:var(--w-muted);text-transform:uppercase;letter-spacing:.05em}
+.draft textarea{font:400 .9rem/1.4 var(--sans);color:var(--w-ink);background:var(--w-bg);border:1px solid #c8cfd9;border-radius:8px;padding:8px 10px;resize:vertical;min-height:64px;width:100%}
+.draft textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.draft .hint{font-size:.76rem;color:var(--w-muted)}
 .cmt{border:1px solid var(--w-line);border-radius:10px;padding:9px 11px;display:grid;gap:4px;font-size:.84rem}
 .cmt .by{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--w-muted)}
 .cmt .by b{color:var(--w-ink);font-weight:600}
@@ -159,6 +163,8 @@ h1{font:700 clamp(1.6rem,3.4vw,2.3rem)/1.06 var(--sans);letter-spacing:-.03em;ma
   .only-m{display:inline}
   .only-s{display:inline-flex!important}
   .cmt,.res{font-size:.8rem;padding:8px 10px}
+  .draft{padding:8px 9px}
+  .draft textarea{font-size:16px;min-height:108px}
   .meta{font-size:.74rem}
 }
 @media(prefers-reduced-motion:no-preference){.ticket,.res,.cmt{animation:in .18s ease-out both}@keyframes in{from{transform:translateY(3px);opacity:.6}}}
@@ -212,7 +218,9 @@ h1{font:700 clamp(1.6rem,3.4vw,2.3rem)/1.06 var(--sans);letter-spacing:-.03em;ma
   function nb(s){return '<span style="white-space:nowrap">'+s+'</span>'}
 
   /* s: "none" (no response), "acc" (accepted: the wrong answer), "rej" (rejected with the reason) */
-  function fresh(){return {s:"none",assigned:false,undone:false}}
+  function fresh(){return {s:"none",assigned:false,undone:false,drafting:false,reason:""}}
+  /* the suggested reason the reviewer can edit before rejecting */
+  function suggested(){return DUP.label.replace("FITNESS","Fitness")+' is in twice (A-201 plan and A-601 schedule). Counted once it is '+ONCE+' occupants, and '+CORR.clear+' in. meets Table 1020.3 for under 50.'}
   var st=fresh(), hist=[];
   function snap(){hist.push(JSON.stringify(st))}
 
@@ -274,11 +282,14 @@ h1{font:700 clamp(1.6rem,3.4vw,2.3rem)/1.06 var(--sans);letter-spacing:-.03em;ma
     h+=occTable();
     if(st.s==="none"){
       h+=why();
+      if(st.drafting){
+        h+='<div class="draft"><label for="reason">Reason for rejecting (stays on the ticket)</label><textarea id="reason" rows="3">'+e(st.reason)+'</textarea><span class="hint">Suggested from the sources above. Edit it if you like.</span><div class="btns"><button type="button" class="btn primary" data-confirm="1">Reject ticket</button><button type="button" class="btn" data-cancel="1">Cancel</button></div></div>';
+      } else
       h+='<div class="btns"><button type="button" class="btn primary" data-rej="1">Reject with reason</button><button type="button" class="btn" data-acc="1">Accept</button>'+(st.assigned?'<span class="who3 asg"><i class="av">DR</i>Assigned to '+e(PM)+', PM</span>':'<button type="button" class="btn" data-asg="1">Assign</button>')+'</div>';
     } else if(st.s==="acc"){
       h+='<div class="res"><h3>Heads up: this redesigns a corridor that already passes</h3><p>Widening '+CORR.id+' by '+ADD+' in. along '+CORR.lengthFt+' ft takes '+LOST+' sq ft from the apartments. Undo puts the ticket back to None.</p><div class="btns"><button type="button" class="btn primary" data-undo="1">Undo</button></div></div>';
     } else {
-      h+='<div class="cmt"><div class="by"><i class="av">MB</i><b>'+e(USER)+'</b><span>Rejected with reason</span></div><p>'+e(DUP.label.replace("FITNESS","Fitness"))+' is in twice (A-201 plan and A-601 schedule). '+CORR.clear+' in. meets Table 1020.3 for under 50.</p></div>';
+      h+='<div class="cmt"><div class="by"><i class="av">MB</i><b>'+e(USER)+'</b><span>Rejected with reason</span></div><p>'+e(st.reason)+'</p></div>';
     }
     h+='<div class="meta"><span class="only-s">Reviewing</span><span class="who3 only-s"><i class="av">MB</i>'+e(USER)+', AIA · Mesquite Studio</span>'+(st.assigned&&st.s!=="none"?'<span class="who3"><i class="av">DR</i>Assigned to '+e(PM)+', PM</span>':'')+'</div>';
     return h+'</div>';
@@ -287,6 +298,7 @@ h1{font:700 clamp(1.6rem,3.4vw,2.3rem)/1.06 var(--sans);letter-spacing:-.03em;ma
     var n=document.getElementById("now"), cls="", b, s;
     if(st.s==="acc"){cls="bad";b="Accepted: a corridor redesign for occupants who aren't there.";s="Undo, then reject it with the reason."}
     else if(st.s==="rej"){cls="ok";b="Rejected, and the reason is on the ticket.";s="Corridor "+CORR.id+" stays "+CORR.clear+" in. The next reviewer can see why."}
+    else if(st.drafting){b="Check the reason, then reject.";s="It stays on the ticket, so the next reviewer sees why it was closed."}
     else if(st.assigned){b="Assigning doesn't decide the ticket.";s=PM+" can check the schedule, but the status stays None until someone rejects or accepts it."}
     else if(st.undone){cls="ok";b="Undone. T-412 is back to None.";s="Reject it with the reason, or assign it to the PM."}
     else{b="This ticket counts one room twice.";s="Each row shows its source. Try accepting it anyway."}
@@ -295,14 +307,17 @@ h1{font:700 clamp(1.6rem,3.4vw,2.3rem)/1.06 var(--sans);letter-spacing:-.03em;ma
   var A=document.getElementById("app"), U=document.getElementById("undo");
   document.getElementById("proj").textContent="[Made-up] "+PROJ+" · "+REVIEW;
   function render(){A.innerHTML=sheet()+ticket();U.disabled=!hist.length;narrate()}
-  function undo(){if(!hist.length)return;st=JSON.parse(hist.pop());st.undone=true;render()}
+  A.addEventListener("input",function(ev){if(ev.target.id==="reason"){st.reason=ev.target.value;var c=A.querySelector("[data-confirm]");if(c)c.disabled=!ev.target.value.trim()}});
+  function undo(){if(!hist.length)return;st=JSON.parse(hist.pop());st.undone=true;st.drafting=false;render()}
   document.addEventListener("click",function(ev){
     var b=ev.target.closest("button"); if(!b||b.disabled)return;
     var d=b.dataset;
     if(b.id==="undo"||d.undo){undo();return}
     if(b.id==="reset"){st=fresh();hist=[];render();scrollTo(0,0);return}
     if(d.acc){snap();st.undone=false;st.s="acc"}
-    if(d.rej){snap();st.undone=false;st.s="rej"}
+    if(d.rej){st.drafting=true;if(!st.reason)st.reason=suggested();render();var t=document.getElementById("reason");if(t){t.focus({preventScroll:true});t.setSelectionRange(t.value.length,t.value.length);t.closest(".draft").scrollIntoView({block:"nearest"})}return}
+    if(d.cancel){st.drafting=false;render();return}
+    if(d.confirm){var v=(document.getElementById("reason").value||"").trim();if(!v){document.getElementById("reason").focus();return}snap();st.undone=false;st.drafting=false;st.reason=v;st.s="rej"}
     if(d.asg){snap();st.undone=false;st.assigned=true}
     render();
   });
